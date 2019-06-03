@@ -1,0 +1,23 @@
+%this is height based simulation of 1d btw sandpile
+close all
+clear all
+total_time = 1000;
+hei = zeros(1,11);%start form falt
+flow_in = [1 zeros(1,10)];
+hei_evo = zeros(total_time,11);
+diff_evo = zeros(total_time,10);
+dc = 10;
+for t = 2:total_time
+    hei_evo(t,:) = hei_evo(t-1,:)+flow_in;
+    temp1 = hei_evo(t,:);
+    shift = hei_evo(t,2:end);%a shift and left close boundary
+    diff_evo(t,:) = hei_evo(t,1:end-1) - shift;
+    thr_idx = find(diff_evo(t,:)>dc);%check crash
+    temp1(thr_idx) = temp1(thr_idx)-1;
+    temp1(thr_idx+1) = temp1(thr_idx+1)+1;
+    if temp1(1,end)>10
+        temp1(1,end) = temp1(1,end)-1;
+    end
+    hei_evo(t,:) = temp1;
+end
+figure;imagesc(hei_evo)
