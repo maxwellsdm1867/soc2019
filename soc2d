@@ -1,0 +1,90 @@
+%Avalanche happens when z>zc.
+zc=10;
+%size of sanpile
+N=50;
+%Give a initial state
+i=2;
+slope=zeros(N+2,N+2);
+while i<=N+1
+    j=2;
+    while j<=N+1
+        slope(i,j)=randi([0 zc]);
+        j=j+1;
+    end
+    i=i+1;
+end
+time=1;
+s(2)=0;%
+t(2)=0;
+l(2)=0;
+repeat=0;
+while time<=100000
+s(time)=0;
+t(time)=0;
+l(time)=0;
+%Randomly pick an index i,j.Add a sand over there.
+index1=randi([2 N+1]);
+index2=randi([2 N+1]);
+%z(i,j)=2h(i,j)-h(i+1,j)-h(i,j+1);
+%Update rule:z(i,j)=z(i,j)+2;z(i-1,j)=z(i-1,j)-1;z(i,j-1)=z(i,j-1)-1;
+slope(index1,index2)=slope(index1,index2)+2;
+slope(index1-1,index2)=slope(index1-1,index2)-1;
+slope(index1,index2-1)=slope(index1,index2-1)-1;
+%Closed Boundary condition.z(i,j)=0 when i=1 or j=1
+slope(1,index2)=0;
+slope(index1,1)=0;
+%find points that avalanche happen 
+check=(slope>zc);
+slopea=check;
+while isequal(check,zeros(N+2,N+2))==0
+t(time)=t(time)+1;
+s(time)=s(time)+sum(sum(check));
+repeat=repeat+1;
+%z(i,j)=z(i,j)-4 at avalanche points.
+%Open boundary condition.z(i,j)=z(i,j)-3 if i=N+1 or
+%j=N+1;z(i,j)=z(i,j)-2 if i=j=N+1;
+slope=slope-2*check;
+a=check;
+a(N+1,:)=0;
+slope=slope-a;
+a=check;
+a(:,N+1)=0;
+slope=slope-a;
+%cirshift(A(i+1,j),1,1)=A(i,j).
+%h(i+1,j)=h(i+1,j)+1 except boundary.Do the same thing at the other three
+%side.
+a1=circshift(check,1,1);
+a1(N+2,:)=0;
+slope=slope+a1;
+a2=circshift(check,-1,1);
+a2(1,:)=0;
+slope=slope+a2;
+a3=circshift(check,1,2);
+a3(:,N+2)=0;
+slope=slope+a3;
+a4=circshift(check,-1,2);
+a4(:,1)=0;
+slope=slope+a4;
+check=(slope>zc);
+slopea=slopea+check;
+end
+%After avalanche end,checking sizes of avalanche.
+x=0:N+1;
+x=repmat(x,N+2,1);
+y=0:N+1;
+y=y';
+y=repmat(y,1,N+2);
+if isequal(slopea,zeros(N+2,N+2))==0
+xall=slopea.*x;
+yall=slopea.*y;
+xrel=slopea.*x-slopea.*sum(sum(xall))/sum(sum(slopea));
+xrel(1,:)=0;xrel(:,1)=0;xrel(N+2,:)=0;xrel(:,N+2)=0;
+yrel=slopea.*y-slopea.*sum(sum(yall))/sum(sum(slopea));
+yrel(1,:)=0;yrel(:,1)=0;yrel(N+2,:)=0;yrel(:,N+2)=0;
+rrel=(sum(sum(abs(xrel))).^2+sum(sum(abs(yrel))).^2).^0.5;
+l(time)=rrel/sum(sum(slopea));
+else
+l(time)=0;
+end
+time=time+1;
+end
